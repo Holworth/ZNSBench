@@ -1,0 +1,13 @@
+# Target labels
+ gflags-project
+# Source files and their labels
+/home/femu/ZNSBench/build/third-party/CMakeFiles/gflags-project
+/home/femu/ZNSBench/build/third-party/CMakeFiles/gflags-project.rule
+/home/femu/ZNSBench/build/third-party/CMakeFiles/gflags-project-complete.rule
+/home/femu/ZNSBench/build/third-party/gflags-project-prefix/src/gflags-project-stamp/gflags-project-install.rule
+/home/femu/ZNSBench/build/third-party/gflags-project-prefix/src/gflags-project-stamp/gflags-project-mkdir.rule
+/home/femu/ZNSBench/build/third-party/gflags-project-prefix/src/gflags-project-stamp/gflags-project-download.rule
+/home/femu/ZNSBench/build/third-party/gflags-project-prefix/src/gflags-project-stamp/gflags-project-update.rule
+/home/femu/ZNSBench/build/third-party/gflags-project-prefix/src/gflags-project-stamp/gflags-project-patch.rule
+/home/femu/ZNSBench/build/third-party/gflags-project-prefix/src/gflags-project-stamp/gflags-project-configure.rule
+/home/femu/ZNSBench/build/third-party/gflags-project-prefix/src/gflags-project-stamp/gflags-project-build.rule

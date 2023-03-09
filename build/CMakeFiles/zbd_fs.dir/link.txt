@@ -1,0 +1,2 @@
+/usr/bin/ar qc libzbd_fs.a  CMakeFiles/zbd_fs.dir/src/zbd_fs.cc.o CMakeFiles/zbd_fs.dir/src/histogram.cc.o
+/usr/bin/ranlib libzbd_fs.a

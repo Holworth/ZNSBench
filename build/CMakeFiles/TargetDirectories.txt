@@ -1,0 +1,7 @@
+/home/femu/ZNSBench/build/CMakeFiles/rebuild_cache.dir
+/home/femu/ZNSBench/build/CMakeFiles/edit_cache.dir
+/home/femu/ZNSBench/build/CMakeFiles/zns_bench.dir
+/home/femu/ZNSBench/build/CMakeFiles/zbd_fs.dir
+/home/femu/ZNSBench/build/third-party/CMakeFiles/rebuild_cache.dir
+/home/femu/ZNSBench/build/third-party/CMakeFiles/edit_cache.dir
+/home/femu/ZNSBench/build/third-party/CMakeFiles/gflags-project.dir

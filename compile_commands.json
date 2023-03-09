@@ -1,0 +1,12 @@
+[
+{
+  "directory": "/home/femu/ZNSBench/build",
+  "command": "/usr/bin/c++   -I/home/femu/ZNSBench/build/include  -g   -std=gnu++17 -o CMakeFiles/zns_bench.dir/zns_bench.cc.o -c /home/femu/ZNSBench/zns_bench.cc",
+  "file": "/home/femu/ZNSBench/zns_bench.cc"
+},
+{
+  "directory": "/home/femu/ZNSBench/build",
+  "command": "/usr/bin/c++   -I/home/femu/ZNSBench/build/include  -g   -std=gnu++17 -o CMakeFiles/zbd_fs.dir/zbd_fs.cc.o -c /home/femu/ZNSBench/zbd_fs.cc",
+  "file": "/home/femu/ZNSBench/zbd_fs.cc"
+}
+]

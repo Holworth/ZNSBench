@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/home/femu/ZNSBench/build/third-party/CMakeFiles/gflags-project"
+		},
+		{
+			"file" : "/home/femu/ZNSBench/build/third-party/CMakeFiles/gflags-project.rule"
+		},
+		{
+			"file" : "/home/femu/ZNSBench/build/third-party/CMakeFiles/gflags-project-complete.rule"
+		},
+		{
+			"file" : "/home/femu/ZNSBench/build/third-party/gflags-project-prefix/src/gflags-project-stamp/gflags-project-install.rule"
+		},
+		{
+			"file" : "/home/femu/ZNSBench/build/third-party/gflags-project-prefix/src/gflags-project-stamp/gflags-project-mkdir.rule"
+		},
+		{
+			"file" : "/home/femu/ZNSBench/build/third-party/gflags-project-prefix/src/gflags-project-stamp/gflags-project-download.rule"
+		},
+		{
+			"file" : "/home/femu/ZNSBench/build/third-party/gflags-project-prefix/src/gflags-project-stamp/gflags-project-update.rule"
+		},
+		{
+			"file" : "/home/femu/ZNSBench/build/third-party/gflags-project-prefix/src/gflags-project-stamp/gflags-project-patch.rule"
+		},
+		{
+			"file" : "/home/femu/ZNSBench/build/third-party/gflags-project-prefix/src/gflags-project-stamp/gflags-project-configure.rule"
+		},
+		{
+			"file" : "/home/femu/ZNSBench/build/third-party/gflags-project-prefix/src/gflags-project-stamp/gflags-project-build.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"gflags-project"
+		],
+		"name" : "gflags-project"
+	}
+}

@@ -1,0 +1,1 @@
+cmd='cmake;/home/femu/ZNSBench/third-party/gflags;-DCMAKE_INSTALL_PREFIX=/home/femu/ZNSBench/build;-DCMAKE_BUILD_TYPE=Release;-DCMAKE_C_FLAGS=-fPIC;-DCMAKE_CXX_FLAGS=-fPIC;-DCMAKE_VERBOSE_MAKEFILE=FALSE'

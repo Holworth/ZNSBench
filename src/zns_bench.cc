@@ -162,7 +162,42 @@ private:
     free(buf);
   }
 
-  static void ReadRandom(ThreadState *state) {}
+  static void ReadRandom(ThreadState *state) {
+    auto zbd = state->zbd;
+    // Prepare some data to write, Note that the allocated buf needs to be
+    // aligned
+    char *buf = nullptr;
+    posix_memalign((void **)&buf, sysconf(_SC_PAGESIZE), state->option.bs);
+
+    for (size_t i = 0; i < state->option.bs; ++i) {
+      buf[i] = '1';
+    }
+    auto dura = Duration(state->option.duration);
+    Zone *zone = nullptr;
+
+    auto block_num = zbd->GetZoneSize() / state->option.bs;
+    auto read_f = zbd->GetReadDirectFD();
+
+    while (!dura.Ending()) {
+      // Pick a zone
+      while (!zone) {
+        auto zone_id = rand() % zbd->GetNrZones();
+        zone = zbd->io_zones_[zone_id].get();
+        if (!zone->Acquire()) {
+          zone = nullptr;
+          continue;
+        }
+      }
+      // Randomly pick a block to read
+      auto random_block_idx = rand() % block_num;
+      auto off = random_block_idx * state->option.bs;
+      {
+        MetricsGuard guard(state->option.bs, state->statistic, kRead);
+        pread(read_f, buf, state->option.bs, off);
+      }
+    }
+  }
+
   static void ReadSeq(ThreadState *state) {}
 
   using RunningThread = std::shared_ptr<std::thread>;

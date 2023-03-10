@@ -21,6 +21,25 @@
 #include <utility>
 #include <vector>
 
+Zone::Zone(ZonedBlockDevice *zbd, struct zbd_zone *z)
+    : zbd_(zbd),
+      busy_(false),
+      start_(zbd_zone_start(z)),
+      max_capacity_(zbd_zone_capacity(z)),
+      wp_(zbd_zone_wp(z))
+      {
+  used_capacity_ = 0;
+  capacity_ = 0;
+  if (!(zbd_zone_full(z) || zbd_zone_offline(z) || zbd_zone_rdonly(z)))
+    capacity_ = zbd_zone_capacity(z) - (zbd_zone_wp(z) - zbd_zone_start(z));
+}
+
+bool Zone::IsUsed() { return (used_capacity_ > 0); }
+uint64_t Zone::GetCapacityLeft() { return capacity_; }
+bool Zone::IsFull() { return (capacity_ == 0); }
+bool Zone::IsEmpty() { return (wp_ == start_); }
+uint64_t Zone::GetZoneNr() { return start_ / zbd_->GetZoneSize(); }
+
 bool Zone::Reset() {
   size_t zone_sz = zbd_->GetZoneSize();
   unsigned int report = 1;
@@ -87,7 +106,7 @@ bool Zone::Close() {
   return true;
 }
 
-bool Zone::Append(char *data, uint32_t size, bool is_gc) {
+bool Zone::Append(char *data, uint32_t size) {
 
   char *ptr = data;
   uint32_t left = size;
@@ -103,7 +122,6 @@ bool Zone::Append(char *data, uint32_t size, bool is_gc) {
   // errno = 75, "Value too large for defined data type"
   while (left) {
     ret = pwrite(fd, ptr, left, wp_);
-    // printf("[kqh] Zone write %d bytes\n", ret);
     if (ret < 0) {
       printf("[kqh] ZoneAppend Error: %s\n", strerror(errno));
       assert(false);

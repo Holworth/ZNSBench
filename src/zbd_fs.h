@@ -21,15 +21,11 @@ public:
   uint64_t wp_;
   std::atomic<uint64_t> used_capacity_;
 
-  // Mark if the zone is in provisioning state, can be mutate only
-  // after calling Acquire on it
-  bool provisioning_zone_;
-
   bool Reset();
   bool Finish();
   bool Close();
 
-  bool Append(char *data, uint32_t size, bool is_gc = false);
+  bool Append(char *data, uint32_t size);
 
   bool IsUsed();
   bool IsFull();

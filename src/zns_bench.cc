@@ -5,6 +5,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <thread>
+#include <unistd.h>
 
 DEFINE_string(bench, "writeseq", "Write-Read patterns for this benchmark");
 DEFINE_uint64(bs, 4096, "request size for each read-write operation");
@@ -50,9 +51,9 @@ public:
 
     static TimePoint NowTime() { return std::chrono::steady_clock::now(); }
 
-    static uint64_t ElapseTimeMicro(TimePoint start) {
+    static uint64_t ElapseTimeMicro(TimePoint _start) {
       auto dura = std::chrono::duration_cast<std::chrono::microseconds>(
-          NowTime() - start);
+          NowTime() - _start);
       return dura.count();
     }
   };
@@ -101,7 +102,7 @@ public:
       thread_stat->statistic = statistic_;
       thread_stat->zbd = zbd_.get();
 
-      if (option_.bench == "write") {
+      if (option_.bench == "writeseq") {
         thread_stat->method = &Benchmark::WriteSeq;
       } else if (option_.bench == "readseq") {
         thread_stat->method = &Benchmark::ReadSeq;
@@ -111,32 +112,54 @@ public:
 
       running_threads_.emplace_back(YieldThread(thread_stat));
     }
+
+    // Wait for exit
+    for (auto t : running_threads_) {
+      t->join();
+    }
   }
+
+  void Report() { statistic_->Report(); }
 
 private:
   static void WriteSeq(ThreadState *state) {
     auto zbd = state->zbd;
-    // Prepare some data to write
-    char *buf = new char[state->option.bs];
+    // Prepare some data to write, Note that the allocated buf needs to be
+    // aligned
+    char *buf = nullptr;
+    posix_memalign((void **)&buf, sysconf(_SC_PAGESIZE), state->option.bs);
+
     for (size_t i = 0; i < state->option.bs; ++i) {
       buf[i] = '1';
     }
     auto dura = Duration(state->option.duration);
+    Zone *zone = nullptr;
 
     while (!dura.Ending()) {
-      auto zone_id = rand() % zbd->GetNrZones();
-      auto zone = zbd->io_zones_[zone_id];
-      if (!zone->Acquire()) {
-        continue;
+      while (!zone) {
+        auto zone_id = rand() % zbd->GetNrZones();
+        zone = zbd->io_zones_[zone_id].get();
+        if (!zone->Acquire()) {
+          zone = nullptr;
+          continue;
+        }
+      }
+      if (zone->GetCapacityLeft() < state->option.bs) {
+        if (!zone->Reset()) {
+          assert(false);
+        }
       }
       {
         MetricsGuard guard(state->option.bs, state->statistic, kWrite);
         zone->Append(buf, state->option.bs);
-        zone->CheckRelease();
       }
     }
 
-    delete[] buf;
+    if (zone) {
+      zone->CheckRelease();
+    }
+
+    free(buf);
   }
 
   static void ReadRandom(ThreadState *state) {}
@@ -157,6 +180,21 @@ private:
   Statistics *statistic_;
 };
 
-int zns_bench(int argc, char *argv[]) { return 0; }
+int zns_bench(int argc, char *argv[]) {
+  google::ParseCommandLineFlags(&argc, &argv, true);
+
+  Benchmark::Option option;
+  option.bench = FLAGS_bench;
+  option.bs = FLAGS_bs;
+  option.dev = FLAGS_dev;
+  option.duration = FLAGS_duration;
+  option.threads = FLAGS_threads;
+
+  auto b = Benchmark(option);
+  b.Run();
+  b.Report();
+
+  return 0;
+}
 
 int main(int argc, char *argv[]) { return zns_bench(argc, argv); }

@@ -1,1 +1,0 @@
-/usr/bin/c++  -g   CMakeFiles/zns_bench.dir/src/zns_bench.cc.o  -o zns_bench  libzbd_fs.a -lzbd lib/libgflags.a -lpthread 

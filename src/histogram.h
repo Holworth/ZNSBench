@@ -8,13 +8,19 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
 #pragma once
+#include <atomic>
 #include <cassert>
+#include <cstdint>
 #include <map>
 #include <mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <atomic>
+#include <iostream>
+
+inline double ToMiB(uint64_t value) {
+  return value / (1024.0 * 1024.0);
+}
 
 struct HistogramData {
   double median;
@@ -31,7 +37,7 @@ struct HistogramData {
 };
 
 class HistogramBucketMapper {
- public:
+public:
   HistogramBucketMapper();
 
   // converts a value to the bucket index.
@@ -49,7 +55,7 @@ class HistogramBucketMapper {
     return bucketValues_[bucketNumber];
   }
 
- private:
+private:
   std::vector<uint64_t> bucketValues_;
   uint64_t maxBucketValue_;
   uint64_t minBucketValue_;
@@ -60,13 +66,13 @@ struct HistogramStat {
   HistogramStat();
   ~HistogramStat() {}
 
-  HistogramStat(const HistogramStat&) = delete;
-  HistogramStat& operator=(const HistogramStat&) = delete;
+  HistogramStat(const HistogramStat &) = delete;
+  HistogramStat &operator=(const HistogramStat &) = delete;
 
   void Clear();
   bool Empty() const;
   void Add(uint64_t value);
-  void Merge(const HistogramStat& other);
+  void Merge(const HistogramStat &other);
 
   inline uint64_t min() const { return min_.load(std::memory_order_relaxed); }
   inline uint64_t max() const { return max_.load(std::memory_order_relaxed); }
@@ -83,7 +89,7 @@ struct HistogramStat {
   double Percentile(double p) const;
   double Average() const;
   double StandardDeviation() const;
-  void Data(HistogramData* const data) const;
+  void Data(HistogramData *const data) const;
   std::string ToString() const;
 
   // To be able to use HistogramStat as thread local variable, it
@@ -94,7 +100,7 @@ struct HistogramStat {
   std::atomic_uint_fast64_t num_;
   std::atomic_uint_fast64_t sum_;
   std::atomic_uint_fast64_t sum_squares_;
-  std::atomic_uint_fast64_t buckets_[109];  // 109==BucketMapper::BucketCount()
+  std::atomic_uint_fast64_t buckets_[109]; // 109==BucketMapper::BucketCount()
   const uint64_t num_buckets_;
 };
 
@@ -104,7 +110,7 @@ enum MetricsType {
 };
 
 class Statistics {
-  public:
+public:
   Statistics() {
     thpt_.insert_or_assign(kWrite, new HistogramStat);
     thpt_.insert_or_assign(kRead, new HistogramStat);
@@ -113,10 +119,10 @@ class Statistics {
   }
 
   ~Statistics() {
-    for (auto& [type, hist] : thpt_) {
+    for (auto &[type, hist] : thpt_) {
       delete hist;
     }
-    for (auto& [type, hist] : latency_) {
+    for (auto &[type, hist] : latency_) {
       delete hist;
     }
   }
@@ -129,7 +135,34 @@ class Statistics {
     latency_[type]->Add(value);
   }
 
-  private:
-  std::unordered_map<MetricsType, HistogramStat*> thpt_;
-  std::unordered_map<MetricsType, HistogramStat*> latency_;
+  void Report() {
+    ReportThroughput(kRead);
+    ReportLatency(kRead);
+    ReportThroughput(kWrite);
+    ReportLatency(kWrite);
+  }
+
+  void ReportThroughput(MetricsType type) {
+    HistogramData data;
+    thpt_[type]->Data(&data);
+    std::cout << "[Throughput]" 
+              << "[Average: " << ToMiB(data.average) << "MiB/s]"
+              << "[Max: " << ToMiB(data.max) << "MiB/s]" 
+              << "[Median: " << ToMiB(data.median) << "MiB/s]\n";
+  }
+
+  void ReportLatency(MetricsType type) {
+    HistogramData data;
+    latency_[type]->Data(&data);
+    std::cout << "[Latency]" 
+              << "[Average: " << data.average << "us]"
+              << "[Median: " << data.median << "us]"
+              << "[P99: "  << data.percentile99 << "us]"
+              << "[P999: " << data.percentile999 << "us]"
+              << "[Max: " << data.max << "us]\n";
+  }
+
+private:
+  std::unordered_map<MetricsType, HistogramStat *> thpt_;
+  std::unordered_map<MetricsType, HistogramStat *> latency_;
 };

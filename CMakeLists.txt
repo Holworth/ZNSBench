@@ -24,3 +24,6 @@ add_library(zbd_fs ${SOURCE_FILE})
 
 add_executable(zns_bench src/zns_bench.cc)
 target_link_libraries(zns_bench zbd_fs zbd ${THIRDPARTY_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+
+add_executable(async_test src/async_test.cc)
+target_link_libraries(async_test zbd_fs zbd ${THIRDPARTY_LIBS} ${CMAKE_THREAD_LIBS_INIT} aio)

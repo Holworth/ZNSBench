@@ -4,6 +4,10 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <cstring>
+#include <cassert>
+
+#include <libaio.h>
 
 class Zone;
 class ZonedBlockDevice;
@@ -88,4 +92,58 @@ public:
 
   std::string GetFilename() { return filename_; }
   uint32_t GetBlockSize() { return block_sz_; }
+};
+
+// A wrapper for Linux AsyncIO, note that this struct only supports one
+// async io request. 
+struct AsyncIORequest {
+  iocb cb;
+  iocb* cb_ptr[1] = {&cb};
+  io_context_t ctx;
+  // If there is a pending async call
+  bool pending_async = false;
+  io_event event;
+
+  // Init context of this Async request
+  bool Init() {
+    pending_async = false;
+    std::memset(&ctx, 0, sizeof(io_context_t));
+    auto ret = io_setup(1, &ctx);
+    return ret == 0;
+  }
+
+  // Initialize an async read command
+  void PrepareRead(int fd, size_t sz, uint64_t off, char* buf) {
+    io_prep_pread(&cb, fd, buf, sz, off);
+  }
+
+  // Initialize an async write command
+  void PrepareWrite(int fd, size_t sz, uint64_t off, char* buf) {
+    io_prep_pwrite(&cb, fd, buf, sz, off);
+  }
+
+  // Submit this async command. Return false if any error happens
+  // Set the pending flag.
+  bool Submit() {
+    auto ret = io_submit(ctx, 1, cb_ptr);
+    if (ret < 0) {
+      return false;
+    }
+    pending_async = true;
+    return true;
+  }
+
+  bool CheckFinish() {
+    assert(IsPending());
+    timespec timeout;
+    timeout.tv_sec = 0;
+    // Check for 1ms
+    timeout.tv_nsec = 1000000;
+    if (io_getevents(ctx, 0, 1,  &event, &timeout) == 1) {
+      return true;
+    }
+    return false;
+  }
+
+  bool IsPending() const { return pending_async; }
 };
